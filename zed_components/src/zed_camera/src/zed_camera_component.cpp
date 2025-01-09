@@ -5881,9 +5881,9 @@ void ZedCamera::threadFunc_zedGrab()
       // <---- Apply depth settings
 
       // ----> Apply video dynamic parameters
-      if (!mSimMode && !mSvoMode) {
-        applyVideoSettings();
-      }
+      // if (!mSimMode && !mSvoMode) {
+      //   applyVideoSettings();
+      // }
       // <---- Apply video dynamic parameters
 
       // ----> Check for Positional Tracking requirement
@@ -5902,50 +5902,50 @@ void ZedCamera::threadFunc_zedGrab()
         }
       }
 
-      if (mGnssFusionEnabled && !mGnssFixValid) {
-        rclcpp::Clock steady_clock(RCL_STEADY_TIME);
-        RCLCPP_WARN_THROTTLE(
-          get_logger(), steady_clock, 5000.0,
-          " * Waiting for the first valid GNSS fix...");
-      }
+      // if (mGnssFusionEnabled && !mGnssFixValid) {
+      //   rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+      //   RCLCPP_WARN_THROTTLE(
+      //     get_logger(), steady_clock, 5000.0,
+      //     " * Waiting for the first valid GNSS fix...");
+      // }
       // ----> Check for Positional Tracking requirement
 
-      if (!mDepthDisabled) {
-        // ----> Check for Spatial Mapping requirement
+      // if (!mDepthDisabled) {
+      //   // ----> Check for Spatial Mapping requirement
 
-        mMappingMutex.lock();
-        bool required = mMappingEnabled;
+      //   mMappingMutex.lock();
+      //   bool required = mMappingEnabled;
 
-        if (required && !mSpatialMappingRunning) {
-          start3dMapping();
-        }
-        mMappingMutex.unlock();
+      //   if (required && !mSpatialMappingRunning) {
+      //     start3dMapping();
+      //   }
+      //   mMappingMutex.unlock();
 
-        // <---- Check for Spatial Mapping requirement
+      //   // <---- Check for Spatial Mapping requirement
 
-        // ----> Check for Object Detection requirement
-        mObjDetMutex.lock();
-        if (mObjDetEnabled && !mObjDetRunning) {
-          startObjDetect();
-          if (!sl_tools::isObjDetAvailable(mCamRealModel)) {
-            mObjDetEnabled = false;
-          }
-        }
-        mObjDetMutex.unlock();
+      //   // ----> Check for Object Detection requirement
+      //   mObjDetMutex.lock();
+      //   if (mObjDetEnabled && !mObjDetRunning) {
+      //     startObjDetect();
+      //     if (!sl_tools::isObjDetAvailable(mCamRealModel)) {
+      //       mObjDetEnabled = false;
+      //     }
+      //   }
+      //   mObjDetMutex.unlock();
 
-        // ----> Check for Object Detection requirement
+      //   // ----> Check for Object Detection requirement
 
-        // ----> Check for Body Tracking requirement
-        mBodyTrkMutex.lock();
-        if (mBodyTrkEnabled && !mBodyTrkRunning) {
-          startBodyTracking();
-          if (!sl_tools::isObjDetAvailable(mCamRealModel)) {
-            mBodyTrkEnabled = false;
-          }
-        }
-        mBodyTrkMutex.unlock();
-        // ----> Check for Object Detection requirement
-      }
+      //   // ----> Check for Body Tracking requirement
+      //   mBodyTrkMutex.lock();
+      //   if (mBodyTrkEnabled && !mBodyTrkRunning) {
+      //     startBodyTracking();
+      //     if (!sl_tools::isObjDetAvailable(mCamRealModel)) {
+      //       mBodyTrkEnabled = false;
+      //     }
+      //   }
+      //   mBodyTrkMutex.unlock();
+      //   // ----> Check for Object Detection requirement
+      // }
 
       // ----> Grab freq calculation
       double elapsed_sec = mGrabFreqTimer.toc();
@@ -6014,19 +6014,19 @@ void ZedCamera::threadFunc_zedGrab()
 
         mFrameCount++;
 
-        if (mGnssFusionEnabled) {
-          // Process Fusion data
-          mFusionStatus = mFusion.process();
-          // ----> Fusion errors?
-          if (mFusionStatus != sl::FUSION_ERROR_CODE::SUCCESS &&
-            mFusionStatus != sl::FUSION_ERROR_CODE::NO_NEW_DATA_AVAILABLE)
-          {
-            RCLCPP_ERROR_STREAM(
-              get_logger(),
-              "Fusion error: " << sl::toString(mFusionStatus).c_str());
-          }
-          // <---- Fusion errors?
-        }
+        // if (mGnssFusionEnabled) {
+        //   // Process Fusion data
+        //   mFusionStatus = mFusion.process();
+        //   // ----> Fusion errors?
+        //   if (mFusionStatus != sl::FUSION_ERROR_CODE::SUCCESS &&
+        //     mFusionStatus != sl::FUSION_ERROR_CODE::NO_NEW_DATA_AVAILABLE)
+        //   {
+        //     RCLCPP_ERROR_STREAM(
+        //       get_logger(),
+        //       "Fusion error: " << sl::toString(mFusionStatus).c_str());
+        //   }
+        //   // <---- Fusion errors?
+        // }
 
         // ----> Timestamp
         if (mSvoMode) {
@@ -6046,51 +6046,51 @@ void ZedCamera::threadFunc_zedGrab()
         DEBUG_STREAM_COMM("Grab timestamp: " << mFrameTimestamp.nanoseconds() << " nsec");
         // <---- Timestamp
 
-        if (mStreamingServerRequired && !mStreamingServerRunning) {
-          DEBUG_STR("Streaming server required, but not running");
-          startStreamingServer();
-        }
+        // if (mStreamingServerRequired && !mStreamingServerRunning) {
+        //   DEBUG_STR("Streaming server required, but not running");
+        //   startStreamingServer();
+        // }
 
-        if (!mSimMode) {
-          if (mGnssFusionEnabled && mGnssFixNew) {
-            mGnssFixNew = false;
+        // if (!mSimMode) {
+        //   if (mGnssFusionEnabled && mGnssFixNew) {
+        //     mGnssFixNew = false;
 
-            rclcpp::Time real_frame_ts = sl_tools::slTime2Ros(
-              mZed->getTimestamp(sl::TIME_REFERENCE::IMAGE));
-            DEBUG_STREAM_GNSS(
-              "GNSS synced frame ts: "
-                << real_frame_ts.nanoseconds() << " nsec");
-            float dT_sec = (static_cast<float>(real_frame_ts.nanoseconds()) -
-              static_cast<float>(mGnssTimestamp.nanoseconds())) /
-              1e9;
-            DEBUG_STREAM_GNSS(
-              "DeltaT: "
-                << dT_sec << " sec [" << std::fixed << std::setprecision(9)
-                << static_cast<float>(real_frame_ts.nanoseconds()) / 1e9 << "-"
-                << static_cast<float>(mGnssTimestamp.nanoseconds()) / 1e9 << "]");
+        //     rclcpp::Time real_frame_ts = sl_tools::slTime2Ros(
+        //       mZed->getTimestamp(sl::TIME_REFERENCE::IMAGE));
+        //     DEBUG_STREAM_GNSS(
+        //       "GNSS synced frame ts: "
+        //         << real_frame_ts.nanoseconds() << " nsec");
+        //     float dT_sec = (static_cast<float>(real_frame_ts.nanoseconds()) -
+        //       static_cast<float>(mGnssTimestamp.nanoseconds())) /
+        //       1e9;
+        //     DEBUG_STREAM_GNSS(
+        //       "DeltaT: "
+        //         << dT_sec << " sec [" << std::fixed << std::setprecision(9)
+        //         << static_cast<float>(real_frame_ts.nanoseconds()) / 1e9 << "-"
+        //         << static_cast<float>(mGnssTimestamp.nanoseconds()) / 1e9 << "]");
 
-            if (dT_sec < 0.0) {
-              RCLCPP_WARN_STREAM(
-                get_logger(),
-                "GNSS sensor and ZED Timestamps are not good. dT = " << dT_sec
-                                                                     << " sec");
-            }
-          }
-        }
+        //     if (dT_sec < 0.0) {
+        //       RCLCPP_WARN_STREAM(
+        //         get_logger(),
+        //         "GNSS sensor and ZED Timestamps are not good. dT = " << dT_sec
+        //                                                              << " sec");
+        //     }
+        //   }
+        // }
 
         // ----> Check recording status
-        mRecMutex.lock();
-        if (mRecording) {
-          mRecStatus = mZed->getRecordingStatus();
+        // mRecMutex.lock();
+        // if (mRecording) {
+        //   mRecStatus = mZed->getRecordingStatus();
 
-          if (!mRecStatus.status) {
-            rclcpp::Clock steady_clock(RCL_STEADY_TIME);
-            RCLCPP_ERROR_THROTTLE(
-              get_logger(), steady_clock, 1000.0,
-              "Error saving frame to SVO");
-          }
-        }
-        mRecMutex.unlock();
+        //   if (!mRecStatus.status) {
+        //     rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+        //     RCLCPP_ERROR_THROTTLE(
+        //       get_logger(), steady_clock, 1000.0,
+        //       "Error saving frame to SVO");
+        //   }
+        // }
+        // mRecMutex.unlock();
         // <---- Check recording status
       }
 
@@ -6158,41 +6158,41 @@ void ZedCamera::threadFunc_zedGrab()
         // <---- Retrieve the point cloud if someone has subscribed to
 
         // ----> Localization processing
-        if (mPosTrackingStarted) {
-          if (!mSvoPause) {
-            DEBUG_PT("================================================================");
-            DEBUG_PT("***** processOdometry *****");
-            processOdometry();
-            DEBUG_PT("***** processPose *****");
-            processPose();
-            if (mGnssFusionEnabled) {
-              if (mSvoMode) {
-                DEBUG_PT("***** processSvoGnssData *****");
-                processSvoGnssData();
-              }
-              DEBUG_PT("***** processGeoPose *****");
-              processGeoPose();
-            }
-          }
+        // if (mPosTrackingStarted) {
+        //   if (!mSvoPause) {
+        //     DEBUG_PT("================================================================");
+        //     DEBUG_PT("***** processOdometry *****");
+        //     processOdometry();
+        //     DEBUG_PT("***** processPose *****");
+        //     processPose();
+        //     if (mGnssFusionEnabled) {
+        //       if (mSvoMode) {
+        //         DEBUG_PT("***** processSvoGnssData *****");
+        //         processSvoGnssData();
+        //       }
+        //       DEBUG_PT("***** processGeoPose *****");
+        //       processGeoPose();
+        //     }
+        //   }
 
-          // Publish `odom` and `map` TFs at the grab frequency
-          // RCLCPP_INFO(get_logger(), "Publishing TF -> threadFunc_zedGrab");
-          DEBUG_PT("***** publishTFs *****");
-          publishTFs(mFrameTimestamp);
-        }
+        //   // Publish `odom` and `map` TFs at the grab frequency
+        //   // RCLCPP_INFO(get_logger(), "Publishing TF -> threadFunc_zedGrab");
+        //   DEBUG_PT("***** publishTFs *****");
+        //   publishTFs(mFrameTimestamp);
+        // }
         // <---- Localization processing
 
-        mObjDetMutex.lock();
-        if (mObjDetRunning) {
-          processDetectedObjects(mFrameTimestamp);
-        }
-        mObjDetMutex.unlock();
+        // mObjDetMutex.lock();
+        // if (mObjDetRunning) {
+        //   processDetectedObjects(mFrameTimestamp);
+        // }
+        // mObjDetMutex.unlock();
 
-        mBodyTrkMutex.lock();
-        if (mBodyTrkRunning) {
-          processBodies(mFrameTimestamp);
-        }
-        mBodyTrkMutex.unlock();
+        // mBodyTrkMutex.lock();
+        // if (mBodyTrkRunning) {
+        //   processBodies(mFrameTimestamp);
+        // }
+        // mBodyTrkMutex.unlock();
 
         // ----> Region of interest
         processRtRoi(mFrameTimestamp);
@@ -7026,63 +7026,63 @@ void ZedCamera::retrieveVideoDepth()
     mRgbSubscribed = true;
     DEBUG_VD("Left image retrieved");
   }
-  if (mRgbRawSubCount + mLeftRawSubCount + mStereoRawSubCount > 0) {
-    retrieved |= sl::ERROR_CODE::SUCCESS ==
-      mZed->retrieveImage(
-      mMatLeftRaw, sl::VIEW::LEFT_UNRECTIFIED,
-      sl::MEM::CPU, mMatResol);
-    mSdkGrabTS = mMatLeftRaw.timestamp;
-    DEBUG_VD("Left raw image retrieved");
-  }
-  if (mRightSubCount + mStereoSubCount > 0) {
-    retrieved |=
-      sl::ERROR_CODE::SUCCESS ==
-      mZed->retrieveImage(mMatRight, sl::VIEW::RIGHT, sl::MEM::CPU, mMatResol);
-    mSdkGrabTS = mMatRight.timestamp;
-    DEBUG_VD("Right image retrieved");
-  }
-  if (mRightRawSubCount + mStereoRawSubCount > 0) {
-    retrieved |= sl::ERROR_CODE::SUCCESS ==
-      mZed->retrieveImage(
-      mMatRightRaw, sl::VIEW::RIGHT_UNRECTIFIED,
-      sl::MEM::CPU, mMatResol);
-    mSdkGrabTS = mMatRightRaw.timestamp;
-    DEBUG_VD("Right raw image retrieved");
-  }
-  if (mRgbGraySubCount + mLeftGraySubCount > 0) {
-    retrieved |= sl::ERROR_CODE::SUCCESS ==
-      mZed->retrieveImage(
-      mMatLeftGray, sl::VIEW::LEFT_GRAY,
-      sl::MEM::CPU, mMatResol);
-    mSdkGrabTS = mMatLeftGray.timestamp;
-    DEBUG_VD("Left gray image retrieved");
-  }
-  if (mRgbGrayRawSubCount + mLeftGrayRawSubCount > 0) {
-    retrieved |=
-      sl::ERROR_CODE::SUCCESS ==
-      mZed->retrieveImage(
-      mMatLeftRawGray, sl::VIEW::LEFT_UNRECTIFIED_GRAY,
-      sl::MEM::CPU, mMatResol);
-    mSdkGrabTS = mMatLeftRawGray.timestamp;
-    DEBUG_VD("Left gray raw image retrieved");
-  }
-  if (mRightGraySubCount > 0) {
-    retrieved |= sl::ERROR_CODE::SUCCESS ==
-      mZed->retrieveImage(
-      mMatRightGray, sl::VIEW::RIGHT_GRAY,
-      sl::MEM::CPU, mMatResol);
-    mSdkGrabTS = mMatRightGray.timestamp;
-    DEBUG_VD("Right gray image retrieved");
-  }
-  if (mRightGrayRawSubCount > 0) {
-    retrieved |=
-      sl::ERROR_CODE::SUCCESS ==
-      mZed->retrieveImage(
-      mMatRightRawGray, sl::VIEW::RIGHT_UNRECTIFIED_GRAY,
-      sl::MEM::CPU, mMatResol);
-    mSdkGrabTS = mMatRightRawGray.timestamp;
-    DEBUG_VD("Right gray raw image retrieved");
-  }
+  // if (mRgbRawSubCount + mLeftRawSubCount + mStereoRawSubCount > 0) {
+  //   retrieved |= sl::ERROR_CODE::SUCCESS ==
+  //     mZed->retrieveImage(
+  //     mMatLeftRaw, sl::VIEW::LEFT_UNRECTIFIED,
+  //     sl::MEM::CPU, mMatResol);
+  //   mSdkGrabTS = mMatLeftRaw.timestamp;
+  //   DEBUG_VD("Left raw image retrieved");
+  // }
+  // if (mRightSubCount + mStereoSubCount > 0) {
+  //   retrieved |=
+  //     sl::ERROR_CODE::SUCCESS ==
+  //     mZed->retrieveImage(mMatRight, sl::VIEW::RIGHT, sl::MEM::CPU, mMatResol);
+  //   mSdkGrabTS = mMatRight.timestamp;
+  //   DEBUG_VD("Right image retrieved");
+  // }
+  // if (mRightRawSubCount + mStereoRawSubCount > 0) {
+  //   retrieved |= sl::ERROR_CODE::SUCCESS ==
+  //     mZed->retrieveImage(
+  //     mMatRightRaw, sl::VIEW::RIGHT_UNRECTIFIED,
+  //     sl::MEM::CPU, mMatResol);
+  //   mSdkGrabTS = mMatRightRaw.timestamp;
+  //   DEBUG_VD("Right raw image retrieved");
+  // }
+  // if (mRgbGraySubCount + mLeftGraySubCount > 0) {
+  //   retrieved |= sl::ERROR_CODE::SUCCESS ==
+  //     mZed->retrieveImage(
+  //     mMatLeftGray, sl::VIEW::LEFT_GRAY,
+  //     sl::MEM::CPU, mMatResol);
+  //   mSdkGrabTS = mMatLeftGray.timestamp;
+  //   DEBUG_VD("Left gray image retrieved");
+  // }
+  // if (mRgbGrayRawSubCount + mLeftGrayRawSubCount > 0) {
+  //   retrieved |=
+  //     sl::ERROR_CODE::SUCCESS ==
+  //     mZed->retrieveImage(
+  //     mMatLeftRawGray, sl::VIEW::LEFT_UNRECTIFIED_GRAY,
+  //     sl::MEM::CPU, mMatResol);
+  //   mSdkGrabTS = mMatLeftRawGray.timestamp;
+  //   DEBUG_VD("Left gray raw image retrieved");
+  // }
+  // if (mRightGraySubCount > 0) {
+  //   retrieved |= sl::ERROR_CODE::SUCCESS ==
+  //     mZed->retrieveImage(
+  //     mMatRightGray, sl::VIEW::RIGHT_GRAY,
+  //     sl::MEM::CPU, mMatResol);
+  //   mSdkGrabTS = mMatRightGray.timestamp;
+  //   DEBUG_VD("Right gray image retrieved");
+  // }
+  // if (mRightGrayRawSubCount > 0) {
+  //   retrieved |=
+  //     sl::ERROR_CODE::SUCCESS ==
+  //     mZed->retrieveImage(
+  //     mMatRightRawGray, sl::VIEW::RIGHT_UNRECTIFIED_GRAY,
+  //     sl::MEM::CPU, mMatResol);
+  //   mSdkGrabTS = mMatRightRawGray.timestamp;
+  //   DEBUG_VD("Right gray raw image retrieved");
+  // }
   if (retrieved) {
     DEBUG_STREAM_VD("Video Data retrieved");
   }
@@ -7098,24 +7098,24 @@ void ZedCamera::retrieveVideoDepth()
     mSdkGrabTS = mMatDepth.timestamp;
     DEBUG_VD("Depth map retrieved");
   }
-  if (mDisparitySubCount > 0) {
-    DEBUG_STREAM_VD("Retrieving Disparity");
-    retrieved |= sl::ERROR_CODE::SUCCESS ==
-      mZed->retrieveMeasure(
-      mMatDisp, sl::MEASURE::DISPARITY,
-      sl::MEM::CPU, mMatResol);
-    mSdkGrabTS = mMatDisp.timestamp;
-    DEBUG_VD("Disparity map retrieved");
-  }
-  if (mConfMapSubCount > 0) {
-    DEBUG_STREAM_VD("Retrieving Confidence");
-    retrieved |= sl::ERROR_CODE::SUCCESS ==
-      mZed->retrieveMeasure(
-      mMatConf, sl::MEASURE::CONFIDENCE,
-      sl::MEM::CPU, mMatResol);
-    mSdkGrabTS = mMatConf.timestamp;
-    DEBUG_VD("Confidence map retrieved");
-  }
+  // if (mDisparitySubCount > 0) {
+  //   DEBUG_STREAM_VD("Retrieving Disparity");
+  //   retrieved |= sl::ERROR_CODE::SUCCESS ==
+  //     mZed->retrieveMeasure(
+  //     mMatDisp, sl::MEASURE::DISPARITY,
+  //     sl::MEM::CPU, mMatResol);
+  //   mSdkGrabTS = mMatDisp.timestamp;
+  //   DEBUG_VD("Disparity map retrieved");
+  // }
+  // if (mConfMapSubCount > 0) {
+  //   DEBUG_STREAM_VD("Retrieving Confidence");
+  //   retrieved |= sl::ERROR_CODE::SUCCESS ==
+  //     mZed->retrieveMeasure(
+  //     mMatConf, sl::MEASURE::CONFIDENCE,
+  //     sl::MEM::CPU, mMatResol);
+  //   mSdkGrabTS = mMatConf.timestamp;
+  //   DEBUG_VD("Confidence map retrieved");
+  // }
   if (mDepthInfoSubCount > 0) {
     retrieved |= sl::ERROR_CODE::SUCCESS ==
       mZed->getCurrentMinMaxDepth(mMinDepth, mMaxDepth);
@@ -7204,12 +7204,12 @@ void ZedCamera::publishVideoDepth(rclcpp::Time & out_pub_ts)
   out_pub_ts = timeStamp;
 
   // ----> Publish the left=rgb image if someone has subscribed to
-  if (mLeftSubCount > 0) {
-    DEBUG_STREAM_VD("mLeftSubCount: " << mLeftSubCount);
-    publishImageWithInfo(
-      mMatLeft, mPubLeft, mLeftCamInfoMsg,
-      mLeftCamOptFrameId, out_pub_ts);
-  }
+  // if (mLeftSubCount > 0) {
+  //   DEBUG_STREAM_VD("mLeftSubCount: " << mLeftSubCount);
+  //   publishImageWithInfo(
+  //     mMatLeft, mPubLeft, mLeftCamInfoMsg,
+  //     mLeftCamOptFrameId, out_pub_ts);
+  // }
 
   if (mRgbSubCount > 0) {
     DEBUG_STREAM_VD("mRgbSubCount: " << mRgbSubCount);
@@ -7220,12 +7220,12 @@ void ZedCamera::publishVideoDepth(rclcpp::Time & out_pub_ts)
   // <---- Publish the left=rgb image if someone has subscribed to
 
   // ----> Publish the left_raw=rgb_raw image if someone has subscribed to
-  if (mLeftRawSubCount > 0) {
-    DEBUG_STREAM_VD("mLeftRawSubCount: " << mLeftRawSubCount);
-    publishImageWithInfo(
-      mMatLeftRaw, mPubRawLeft, mLeftCamInfoRawMsg,
-      mLeftCamOptFrameId, out_pub_ts);
-  }
+  // if (mLeftRawSubCount > 0) {
+  //   DEBUG_STREAM_VD("mLeftRawSubCount: " << mLeftRawSubCount);
+  //   publishImageWithInfo(
+  //     mMatLeftRaw, mPubRawLeft, mLeftCamInfoRawMsg,
+  //     mLeftCamOptFrameId, out_pub_ts);
+  // }
   if (mRgbRawSubCount > 0) {
     DEBUG_STREAM_VD("mRgbRawSubCount: " << mRgbRawSubCount);
     publishImageWithInfo(
@@ -7235,151 +7235,151 @@ void ZedCamera::publishVideoDepth(rclcpp::Time & out_pub_ts)
   // <---- Publish the left_raw=rgb_raw image if someone has subscribed to
 
   // ----> Publish the left_gray=rgb_gray image if someone has subscribed to
-  if (mLeftGraySubCount > 0) {
-    DEBUG_STREAM_VD("mLeftGraySubCount: " << mLeftGraySubCount);
-    publishImageWithInfo(
-      mMatLeftGray, mPubLeftGray, mLeftCamInfoMsg,
-      mLeftCamOptFrameId, out_pub_ts);
-  }
-  if (mRgbGraySubCount > 0) {
-    DEBUG_STREAM_VD("mRgbGraySubCount: " << mRgbGraySubCount);
-    publishImageWithInfo(
-      mMatLeftGray, mPubRgbGray, mRgbCamInfoMsg,
-      mDepthOptFrameId, out_pub_ts);
-  }
+  // if (mLeftGraySubCount > 0) {
+  //   DEBUG_STREAM_VD("mLeftGraySubCount: " << mLeftGraySubCount);
+  //   publishImageWithInfo(
+  //     mMatLeftGray, mPubLeftGray, mLeftCamInfoMsg,
+  //     mLeftCamOptFrameId, out_pub_ts);
+  // }
+  // if (mRgbGraySubCount > 0) {
+  //   DEBUG_STREAM_VD("mRgbGraySubCount: " << mRgbGraySubCount);
+  //   publishImageWithInfo(
+  //     mMatLeftGray, mPubRgbGray, mRgbCamInfoMsg,
+  //     mDepthOptFrameId, out_pub_ts);
+  // }
   // <---- Publish the left_raw=rgb_raw image if someone has subscribed to
 
   // ----> Publish the left_raw_gray=rgb_raw_gray image if someone has
   // subscribed to
-  if (mLeftGrayRawSubCount > 0) {
-    DEBUG_STREAM_VD("mLeftGrayRawSubCount: " << mLeftGrayRawSubCount);
-    publishImageWithInfo(
-      mMatLeftRawGray, mPubRawLeftGray, mLeftCamInfoRawMsg,
-      mLeftCamOptFrameId, out_pub_ts);
-  }
-  if (mRgbGrayRawSubCount > 0) {
-    DEBUG_STREAM_VD("mRgbGrayRawSubCount: " << mRgbGrayRawSubCount);
-    publishImageWithInfo(
-      mMatLeftRawGray, mPubRawRgbGray, mRgbCamInfoRawMsg,
-      mDepthOptFrameId, out_pub_ts);
-  }
+  // if (mLeftGrayRawSubCount > 0) {
+  //   DEBUG_STREAM_VD("mLeftGrayRawSubCount: " << mLeftGrayRawSubCount);
+  //   publishImageWithInfo(
+  //     mMatLeftRawGray, mPubRawLeftGray, mLeftCamInfoRawMsg,
+  //     mLeftCamOptFrameId, out_pub_ts);
+  // }
+  // if (mRgbGrayRawSubCount > 0) {
+  //   DEBUG_STREAM_VD("mRgbGrayRawSubCount: " << mRgbGrayRawSubCount);
+  //   publishImageWithInfo(
+  //     mMatLeftRawGray, mPubRawRgbGray, mRgbCamInfoRawMsg,
+  //     mDepthOptFrameId, out_pub_ts);
+  // }
   // ----> Publish the left_raw_gray=rgb_raw_gray image if someone has
   // subscribed to
 
   // ----> Publish the right image if someone has subscribed to
-  if (mRightSubCount > 0) {
-    DEBUG_STREAM_VD("mRightSubCount: " << mRightSubCount);
-    publishImageWithInfo(
-      mMatRight, mPubRight, mRightCamInfoMsg,
-      mRightCamOptFrameId, out_pub_ts);
-  }
+  // if (mRightSubCount > 0) {
+  //   DEBUG_STREAM_VD("mRightSubCount: " << mRightSubCount);
+  //   publishImageWithInfo(
+  //     mMatRight, mPubRight, mRightCamInfoMsg,
+  //     mRightCamOptFrameId, out_pub_ts);
+  // }
   // <---- Publish the right image if someone has subscribed to
 
   // ----> Publish the right raw image if someone has subscribed to
-  if (mRightRawSubCount > 0) {
-    DEBUG_STREAM_VD("mRightRawSubCount: " << mRightRawSubCount);
-    publishImageWithInfo(
-      mMatRightRaw, mPubRawRight, mRightCamInfoRawMsg,
-      mRightCamOptFrameId, out_pub_ts);
-  }
+  // if (mRightRawSubCount > 0) {
+  //   DEBUG_STREAM_VD("mRightRawSubCount: " << mRightRawSubCount);
+  //   publishImageWithInfo(
+  //     mMatRightRaw, mPubRawRight, mRightCamInfoRawMsg,
+  //     mRightCamOptFrameId, out_pub_ts);
+  // }
   // <---- Publish the right raw image if someone has subscribed to
 
   // ----> Publish the right gray image if someone has subscribed to
-  if (mRightGraySubCount > 0) {
-    DEBUG_STREAM_VD("mRightGraySubCount: " << mRightGraySubCount);
-    publishImageWithInfo(
-      mMatRightGray, mPubRightGray, mRightCamInfoMsg,
-      mRightCamOptFrameId, out_pub_ts);
-  }
+  // if (mRightGraySubCount > 0) {
+  //   DEBUG_STREAM_VD("mRightGraySubCount: " << mRightGraySubCount);
+  //   publishImageWithInfo(
+  //     mMatRightGray, mPubRightGray, mRightCamInfoMsg,
+  //     mRightCamOptFrameId, out_pub_ts);
+  // }
   // <---- Publish the right gray image if someone has subscribed to
 
   // ----> Publish the right raw gray image if someone has subscribed to
-  if (mRightGrayRawSubCount > 0) {
-    DEBUG_STREAM_VD("mRightGrayRawSubCount: " << mRightGrayRawSubCount);
-    publishImageWithInfo(
-      mMatRightRawGray, mPubRawRightGray,
-      mRightCamInfoRawMsg, mRightCamOptFrameId, out_pub_ts);
-  }
+  // if (mRightGrayRawSubCount > 0) {
+  //   DEBUG_STREAM_VD("mRightGrayRawSubCount: " << mRightGrayRawSubCount);
+  //   publishImageWithInfo(
+  //     mMatRightRawGray, mPubRawRightGray,
+  //     mRightCamInfoRawMsg, mRightCamOptFrameId, out_pub_ts);
+  // }
   // <---- Publish the right raw gray image if someone has subscribed to
 
   // ----> Publish the side-by-side image if someone has subscribed to
-  if (mStereoSubCount > 0) {
-    DEBUG_STREAM_VD("mStereoSubCount: " << mStereoSubCount);
-    auto combined = sl_tools::imagesToROSmsg(
-      mMatLeft, mMatRight,
-      mCameraFrameId, out_pub_ts);
-    DEBUG_STREAM_VD("Publishing SIDE-BY-SIDE message");
-    try {
-      mPubStereo.publish(std::move(combined));
-    } catch (std::system_error & e) {
-      DEBUG_STREAM_COMM("Message publishing ecception: " << e.what());
-    } catch (...) {
-      DEBUG_STREAM_COMM("Message publishing generic ecception: ");
-    }
-  }
+  // if (mStereoSubCount > 0) {
+  //   DEBUG_STREAM_VD("mStereoSubCount: " << mStereoSubCount);
+  //   auto combined = sl_tools::imagesToROSmsg(
+  //     mMatLeft, mMatRight,
+  //     mCameraFrameId, out_pub_ts);
+  //   DEBUG_STREAM_VD("Publishing SIDE-BY-SIDE message");
+  //   try {
+  //     mPubStereo.publish(std::move(combined));
+  //   } catch (std::system_error & e) {
+  //     DEBUG_STREAM_COMM("Message publishing ecception: " << e.what());
+  //   } catch (...) {
+  //     DEBUG_STREAM_COMM("Message publishing generic ecception: ");
+  //   }
+  // }
   // <---- Publish the side-by-side image if someone has subscribed to
 
   // ----> Publish the side-by-side image if someone has subscribed to
-  if (mStereoRawSubCount > 0) {
-    DEBUG_STREAM_VD("mStereoRawSubCount: " << mStereoRawSubCount);
-    auto combined = sl_tools::imagesToROSmsg(
-      mMatLeftRaw, mMatRightRaw,
-      mCameraFrameId, out_pub_ts);
-    DEBUG_STREAM_VD("Publishing SIDE-BY-SIDE RAW message");
-    try {
-      mPubRawStereo.publish(std::move(combined));
-    } catch (std::system_error & e) {
-      DEBUG_STREAM_COMM("Message publishing ecception: " << e.what());
-    } catch (...) {
-      DEBUG_STREAM_COMM("Message publishing generic ecception: ");
-    }
-  }
+  // if (mStereoRawSubCount > 0) {
+  //   DEBUG_STREAM_VD("mStereoRawSubCount: " << mStereoRawSubCount);
+  //   auto combined = sl_tools::imagesToROSmsg(
+  //     mMatLeftRaw, mMatRightRaw,
+  //     mCameraFrameId, out_pub_ts);
+  //   DEBUG_STREAM_VD("Publishing SIDE-BY-SIDE RAW message");
+  //   try {
+  //     mPubRawStereo.publish(std::move(combined));
+  //   } catch (std::system_error & e) {
+  //     DEBUG_STREAM_COMM("Message publishing ecception: " << e.what());
+  //   } catch (...) {
+  //     DEBUG_STREAM_COMM("Message publishing generic ecception: ");
+  //   }
+  // }
   // <---- Publish the side-by-side image if someone has subscribed to
 
   // ---->  Publish the depth image if someone has subscribed to
-  if (mDepthSubCount > 0) {
-    publishDepthMapWithInfo(mMatDepth, out_pub_ts);
-  }
+  // if (mDepthSubCount > 0) {
+  //   publishDepthMapWithInfo(mMatDepth, out_pub_ts);
+  // }
   // <----  Publish the depth image if someone has subscribed to
 
   // ---->  Publish the confidence image and map if someone has subscribed to
-  if (mConfMapSubCount > 0) {
-    DEBUG_STREAM_VD("Publishing CONF MAP message");
-    try {
-      mPubConfMap->publish(
-        *sl_tools::imageToROSmsg(mMatConf, mDepthOptFrameId, out_pub_ts));
-    } catch (std::system_error & e) {
-      DEBUG_STREAM_COMM("Message publishing ecception: " << e.what());
-    } catch (...) {
-      DEBUG_STREAM_COMM("Message publishing generic ecception: ");
-    }
-  }
+  // if (mConfMapSubCount > 0) {
+  //   DEBUG_STREAM_VD("Publishing CONF MAP message");
+  //   try {
+  //     mPubConfMap->publish(
+  //       *sl_tools::imageToROSmsg(mMatConf, mDepthOptFrameId, out_pub_ts));
+  //   } catch (std::system_error & e) {
+  //     DEBUG_STREAM_COMM("Message publishing ecception: " << e.what());
+  //   } catch (...) {
+  //     DEBUG_STREAM_COMM("Message publishing generic ecception: ");
+  //   }
+  // }
   // <----  Publish the confidence image and map if someone has subscribed to
 
   // ----> Publish the disparity image if someone has subscribed to
-  if (mDisparitySubCount > 0) {
-    publishDisparity(mMatDisp, out_pub_ts);
-  }
+  // if (mDisparitySubCount > 0) {
+  //   publishDisparity(mMatDisp, out_pub_ts);
+  // }
   // <---- Publish the disparity image if someone has subscribed to
 
   // ----> Publish the depth info if someone has subscribed to
-  if (mDepthInfoSubCount > 0) {
-    depthInfoMsgPtr depthInfoMsg =
-      std::make_unique<zed_msgs::msg::DepthInfoStamped>();
-    depthInfoMsg->header.stamp = timeStamp;
-    depthInfoMsg->header.frame_id = mDepthOptFrameId;
-    depthInfoMsg->min_depth = mMinDepth;
-    depthInfoMsg->max_depth = mMaxDepth;
+  // if (mDepthInfoSubCount > 0) {
+  //   depthInfoMsgPtr depthInfoMsg =
+  //     std::make_unique<zed_msgs::msg::DepthInfoStamped>();
+  //   depthInfoMsg->header.stamp = timeStamp;
+  //   depthInfoMsg->header.frame_id = mDepthOptFrameId;
+  //   depthInfoMsg->min_depth = mMinDepth;
+  //   depthInfoMsg->max_depth = mMaxDepth;
 
-    DEBUG_STREAM_VD("Publishing DEPTH INFO message");
-    try {
-      mPubDepthInfo->publish(std::move(depthInfoMsg));
-    } catch (std::system_error & e) {
-      DEBUG_STREAM_COMM("Message publishing ecception: " << e.what());
-    } catch (...) {
-      DEBUG_STREAM_COMM("Message publishing generic ecception: ");
-    }
-  }
+  //   DEBUG_STREAM_VD("Publishing DEPTH INFO message");
+  //   try {
+  //     mPubDepthInfo->publish(std::move(depthInfoMsg));
+  //   } catch (std::system_error & e) {
+  //     DEBUG_STREAM_COMM("Message publishing ecception: " << e.what());
+  //   } catch (...) {
+  //     DEBUG_STREAM_COMM("Message publishing generic ecception: ");
+  //   }
+  // }
   // <---- Publish the depth info if someone has subscribed to
 
   // Diagnostic statistic
@@ -8928,6 +8928,8 @@ bool ZedCamera::isPosTrackingRequired()
   if (mPosTrackingEnabled) {
     DEBUG_ONCE_PT("POS. TRACKING required: enabled by param.");
     return true;
+  }else{
+    return false;
   }
 
   if (mPublishTF) {
